@@ -3,7 +3,10 @@ name = "mdbook-external-links"
 description = "Open external links inside your mdBooks in a different tab"
 keywords = [
   "mdbook",
-  "mdbook-external-links",
+  "external",
+  "links",
+  "hyperlink",
+  "href",
   "mdbook-plugin",
   "mdbook-preprocessor",
 ]
