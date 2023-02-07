@@ -84,54 +84,51 @@ mod exl_lib {
             let mut buf = String::with_capacity(chapter.content.len());
 
             let events = Parser::new(&chapter.content).map(|e| {
-                let (ev, lt, url, title) = match &e {
-                    Event::Start(Tag::Link(lt,url,title)) => ("start",lt,url,title),
-                    Event::End(Tag::Link(lt,url,title)) => ("end",lt,url,title),
-                    _ => return e,
+                let ev = match &e {
+                    Event::Start(Tag::Link(..)) => "start",
+                    Event::End(Tag::Link(..)) => "end",
+                    _ => "other",
+                };
+                if ev == "other" {
+                    return e;
+                }
+                let (lt, url, title) = match &e {
+                    Event::Start(Tag::Link(lt, url, title)) => (lt, url, title),
+                    Event::End(Tag::Link(lt, url, title)) => (lt, url, title),
+                    _ => unreachable!(),
                 };
 
                 match lt {
-                    LinkType::Shortcut | LinkType::Inline | LinkType::Reference | LinkType::Collapsed => {
+                    LinkType::Shortcut
+                    | LinkType::Inline
+                    | LinkType::Reference
+                    | LinkType::Collapsed => {
                         if url.starts_with("http") {
                             if ev == "end" {
                                 Event::Html(CowStr::from("</a>"))
                             } else {
-                                Event::Html(
-                                    CowStr::from(
-                                        format!(
-                                            r#"<a href="{url}" title="{title}" target="_blank" rel="noopener noreferrer">"#
-                                        )
-                                    )
-                                )
+                                Event::Html(CowStr::from(format!(
+                                    r#"<a href="{url}" title="{title}" target="_blank">"#
+                                )))
                             }
                         } else {
                             e
                         }
-                    },
+                    }
                     LinkType::Email => {
                         if ev == "end" {
                             Event::Html(CowStr::from("</a>"))
                         } else {
-                            Event::Html(
-                                CowStr::from(
-                                    format!(
-                                        r#"<a href="mailto:{url}">"#
-                                    )
-                                )
-                            )
+                            Event::Html(CowStr::from(format!(r#"<a href="mailto:{url}">"#)))
                         }
-                    } 
+                    }
                     LinkType::Autolink => {
                         if ev == "end" {
                             Event::Html(CowStr::from("</a>"))
                         } else {
-                            Event::Html(
-                                CowStr::from(
-                                    format!(
-                                        r#"<a href="{url}" target="_blank" rel="noopener noreferrer">"#
-                                    )
-                                )
-                            )
+                            Event::Html(CowStr::from(format!(
+                                r#"<a href="{url}" target="_blank">"#
+                            )))
                         }
                     }
                     LinkType::ReferenceUnknown => e,
@@ -140,9 +137,9 @@ mod exl_lib {
                 }
             });
 
-            cmark(events, &mut buf).map(|_| buf).map_err(|err| {
-                anyhow::anyhow!("Markdown serialization failed: {err}")
-            })
+            cmark(events, &mut buf)
+                .map(|_| buf)
+                .map_err(|err| anyhow::anyhow!("Markdown serialization failed: {err}"))
         }
     }
 
@@ -151,19 +148,14 @@ mod exl_lib {
             "external-links-preprocessor"
         }
 
-        fn run(
-            &self,
-            _ctx: &PreprocessorContext,
-            mut book: Book,
-        ) -> Result<Book> {
+        fn run(&self, _ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
             book.for_each_mut(|bi| match bi {
                 mdbook::BookItem::Chapter(ref mut c) => {
                     c.content = self
                         .replace_anchors(c)
                         .expect("Error converting links for chapter");
                 }
-                mdbook::BookItem::Separator
-                | mdbook::BookItem::PartTitle(_) => {}
+                mdbook::BookItem::Separator | mdbook::BookItem::PartTitle(_) => {}
             });
             Ok(book)
         }
