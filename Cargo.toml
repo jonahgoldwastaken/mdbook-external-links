@@ -5,8 +5,6 @@ keywords = [
   "mdbook",
   "external",
   "links",
-  "hyperlink",
-  "href",
   "mdbook-plugin",
   "mdbook-preprocessor",
 ]
