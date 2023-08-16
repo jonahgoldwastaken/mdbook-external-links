@@ -68,7 +68,7 @@ fn handle_supports(pre: &dyn Preprocessor, sub_args: &ArgMatches) -> ! {
 }
 
 mod exl_lib {
-    use pulldown_cmark::{CowStr, Event, LinkType, Parser, Tag};
+    use pulldown_cmark::{CowStr, Event, LinkType, Options, Parser, Tag};
     use pulldown_cmark_to_cmark::cmark;
 
     use super::*;
@@ -83,7 +83,7 @@ mod exl_lib {
         fn replace_anchors(&self, chapter: &mut Chapter) -> Result<String> {
             let mut buf = String::with_capacity(chapter.content.len());
 
-            let events = Parser::new(&chapter.content).map(|e| {
+            let events = Parser::new_ext(&chapter.content, Options::all()).map(|e| {
                 let ev = match &e {
                     Event::Start(Tag::Link(..)) => "start",
                     Event::End(Tag::Link(..)) => "end",
