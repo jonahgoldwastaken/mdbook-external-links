@@ -64,7 +64,7 @@ jobs:
 
       - name: Post Setup | Extract tag name
         shell: bash
-        run: echo "##[set-output name=tag;]$(echo ${GITHUB_REF#refs/tags/})"
+        run: echo "tag=$(echo ${GITHUB_REF#refs/tags/})" >> $GITHUB_OUTPUT
         id: extract_tag
 
       - name: Post Setup | Prepare artifacts [Windows]
